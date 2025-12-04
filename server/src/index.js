@@ -7,6 +7,7 @@ const connectDB = require('./config/database');
 const authRoutes = require('./routes/auth');
 const petitionRoutes = require('./routes/petitions');
 const signatureRoutes = require('./routes/signatures');
+const commentRoutes = require('./routes/comments');
 
 dotenv.config();
 
@@ -24,6 +25,7 @@ connectDB();
 app.use('/api/auth', authRoutes);
 app.use('/api/petitions', petitionRoutes);
 app.use('/api/signatures', signatureRoutes);
+app.use('/api/comments', commentRoutes);
 
 // 기본 라우트
 app.get('/', (req, res) => {

@@ -5,29 +5,27 @@ const jwt = require('jsonwebtoken');
 // 로그인 (자동 회원가입 포함)
 exports.login = async (req, res) => {
   try {
-    const { email, password, name } = req.body;
+    const { studentId, password } = req.body;
 
-    // 이메일과 비밀번호 확인
-    if (!email || !password) {
-      return res.status(400).json({ message: '이메일과 비밀번호를 입력하세요' });
+    // 학번과 비밀번호 확인
+    if (!studentId || !password) {
+      return res.status(400).json({ message: '학번과 비밀번호를 입력하세요' });
     }
 
     // 사용자 찾기
-    let user = await User.findOne({ email });
+    let user = await User.findOne({ studentId });
 
     // 사용자가 없으면 자동 회원가입
     if (!user) {
-      const userName = name || email.split('@')[0]; // name이 없으면 이메일에서 추출
       user = new User({
-        email,
-        password,
-        name: userName
+        studentId,
+        password
       });
       await user.save();
       
       // JWT 토큰 생성
       const token = jwt.sign(
-        { userId: user._id },
+        { userId: user._id, studentId: user.studentId },
         process.env.JWT_SECRET || 'your-secret-key',
         { expiresIn: '7d' }
       );
@@ -37,8 +35,7 @@ exports.login = async (req, res) => {
         token,
         user: {
           id: user._id,
-          email: user.email,
-          name: user.name
+          studentId: user.studentId
         },
         isNewUser: true
       });
@@ -52,18 +49,17 @@ exports.login = async (req, res) => {
 
     // JWT 토큰 생성
     const token = jwt.sign(
-      { userId: user._id },
+      { userId: user._id, studentId: user.studentId },
       process.env.JWT_SECRET || 'your-secret-key',
       { expiresIn: '7d' }
-    )
+    );
 
     res.json({
       message: '로그인 성공',
       token,
       user: {
         id: user._id,
-        email: user.email,
-        name: user.name
+        studentId: user.studentId
       },
       isNewUser: false
     });
@@ -76,25 +72,25 @@ exports.login = async (req, res) => {
 // 회원가입 (별도 엔드포인트 - 선택사항)
 exports.register = async (req, res) => {
   try {
-    const { email, password, name } = req.body;
+    const { studentId, password } = req.body;
 
-    if (!email || !password || !name) {
-      return res.status(400).json({ message: '모든 필드를 입력하세요' });
+    if (!studentId || !password) {
+      return res.status(400).json({ message: '학번과 비밀번호를 입력하세요' });
     }
 
     // 이미 존재하는 사용자 확인
-    const existingUser = await User.findOne({ email });
+    const existingUser = await User.findOne({ studentId });
     if (existingUser) {
-      return res.status(400).json({ message: '이미 존재하는 이메일입니다' });
+      return res.status(400).json({ message: '이미 존재하는 학번입니다' });
     }
 
     // 새 사용자 생성
-    const user = new User({ email, password, name });
+    const user = new User({ studentId, password });
     await user.save();
 
     // JWT 토큰 생성
     const token = jwt.sign(
-      { userId: user._id },
+      { userId: user._id, studentId: user.studentId },
       process.env.JWT_SECRET || 'your-secret-key',
       { expiresIn: '7d' }
     );
@@ -104,8 +100,7 @@ exports.register = async (req, res) => {
       token,
       user: {
         id: user._id,
-        email: user.email,
-        name: user.name
+        studentId: user.studentId
       }
     });
   } catch (error) {
